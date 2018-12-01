@@ -1,19 +1,5 @@
 #!/bin/bash
 
-gcc -S main.c -o main_O0.s -O0 
-gcc main.c -o main_O0 -O0 
-
-flag=""
-
-# change asscociative and pre-evaluation more constant expression
-flag="${flag} -fassociative-math"
-
-# change (x / c) to (x * w) where w is pre-evaluation of (1 / c)
-flag="${flag} -freciprocal-math"
-
-# global common subexpression elimination (reuse common term)
-flag="${flag} -fgcse"
-
 gcc -S main.c -o main.s -Wsuggest-attribute=pure -Wsuggest-attribute=const -O2 #-Q --help=optimizer
 gcc main.c -o run 
 

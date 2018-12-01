@@ -25,7 +25,7 @@ double f1 ( double x )
 	return 0.5 * x;
 }
 
-__attribute__((noinline, optimize("-funsafe-math-optimizations"))) 
+__attribute__((noinline, optimize("unsafe-math-optimizations"), deprecated("this function may be in-accuracy due to change associative")))
 void expr_O2_gcse_const_reciprocal_asscociative ( double *in, double *out )
 {
 	double a = f1(in[0]) * f1(in[0]);
@@ -33,7 +33,7 @@ void expr_O2_gcse_const_reciprocal_asscociative ( double *in, double *out )
 	*out = 0.5 * a * b / 3.0;
 }
 
-__attribute__((noinline, optimize("-freciprocal-math"))) 
+__attribute__((noinline, optimize("reciprocal-math"), deprecated("this function change 'div' to 'mul' may be in-accuracy"))) 
 void expr_O2_gcse_const_reciprocal ( double *in, double *out )
 {
 	double a = f1(in[0]) * f1(in[0]);
