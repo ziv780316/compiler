@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "c_python.h"
 
@@ -21,8 +23,18 @@ void python_close ()
 }
 
 
-int python_eval_string ( const char *command )
+int python_eval_string ( const char *fmt, ... )
 {
+	va_list arg_list;
+	va_start( arg_list, fmt );
+	char command[BUFSIZ];
+	if ( vsprintf( command, fmt, arg_list ) < 0 )
+	{
+		fprintf( stderr, "vsprintf error with format '%s' --> %s\n", fmt, strerror(errno) );
+		exit(1);
+	}
+	va_end( arg_list );
+
 	PyObject *module = PyImport_AddModule("__main__");
 	if ( module == NULL )
 	{
