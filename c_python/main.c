@@ -80,6 +80,16 @@ int main ( int argc, char **argv )
 		);
 	}
 
+	// regular expression
+	int ignore_case = 1;
+	char *pattern = "[vi]\\((\\S+)\\)\\s*=\\s*(\\S+)";
+	char *str_test = "V(node1) = 1.234e+03";
+	char *node_name = python_re_string_slice( str_test, pattern, 1, ignore_case );
+	char *node_value = python_re_string_slice( str_test, pattern, 2, ignore_case );
+	printf( "re pattern = %s\n", pattern );
+	printf( "slice group 1 = %s\n", node_name );
+	printf( "slice group 2 = %s\n", node_value );
+
 	// close C-Python
 	python_close();
 

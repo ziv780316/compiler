@@ -33,11 +33,11 @@ TARGET            := test
 #=================================================
 # Compile implicit rules
 #=================================================
-%.o:%.c
+%.o:%.c c_python.h
 	$(CC) -c $< -o $@ $(CFLAGS) $(INCLUDE)
 	@$(MOVE) $@ $(LIBRARY_DIR) # @ means do not echo command
 
-%.e:%.c
+%.e:%.c c_python.h
 	$(CC) -E $< -o $@ $(CFLAGS) $(INCLUDE)
 	@$(MOVE) $@ $(LIBRARY_DIR)
 

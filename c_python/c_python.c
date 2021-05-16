@@ -10,6 +10,8 @@ static int g_debug_python = 0;
 static const char *python_get_object_type_name ( PyObject *obj );
 static char *python_get_object_c_str ( PyObject *obj );
 
+#define VAR_INTERNAL_TOKEN "___use_in_c_python"
+
 void python_init ( int debug )
 {
 	Py_InitializeEx( 0 ); // 0 is means do not use python signal handler (Py_Initialize will call Py_InitializeEx(1))
@@ -54,6 +56,7 @@ int python_eval_string ( const char *fmt, ... )
 	if ( !ret_obj )
 	{
 		fprintf( stderr, "[Error] python execute command %s fail\n", command );
+		PyErr_Print();
 		return C_PYTHON_EVAL_FAIL;
 	}
 
@@ -176,6 +179,71 @@ python_value_t python_get_dict_value ( const char *name, const char *key, int ty
 	return val;
 }
 
+char *python_re_string_slice ( const char *str, const char *pattern, int idx, int ignore_case )
+{
+	static int init = 0;
+	if ( !init )
+	{
+		python_eval_string( "import re" );
+		init = 1;
+	}
+
+	char local_var_match[BUFSIZ];
+	sprintf( local_var_match, "match_%s", VAR_INTERNAL_TOKEN );
+	int eval_status;
+	if ( ignore_case )
+	{
+		eval_status = python_eval_string( "%s = re.search('%s', '%s', re.IGNORECASE )", local_var_match, pattern, str);
+	}
+	else
+	{
+		eval_status = python_eval_string( "%s = re.search('%s', '%s' )", local_var_match, pattern, str);
+	}
+	if ( C_PYTHON_EVAL_FAIL == eval_status )
+	{
+		fprintf( stderr, "[Error] re.search method fail\n" );
+		exit(1);
+	}
+
+	PyObject *module = PyImport_AddModule("__main__");
+	if ( module == NULL )
+	{
+		fprintf( stderr, "[Error] python import module __main__ fail\n" );
+		exit(1);
+	}
+
+	PyObject *obj = PyObject_GetAttrString( module, local_var_match );
+	if ( !obj )
+	{
+		fprintf( stderr, "[Error] cannot find %s in module __main__ dictionary\n", local_var_match );
+		exit(1);
+	}
+	if ( g_debug_python )
+	{
+		fprintf( stderr, "[DEBUG] object '%s' type=%s\n", local_var_match, python_get_object_type_name(obj) );
+	}
+
+	if ( &_PyNone_Type == Py_TYPE(obj) )
+	{
+		fprintf( stderr, "[Error] str=%s pattern=%s match fail\n", str, pattern );
+		return NULL;
+	}
+
+	char local_var_str[BUFSIZ];
+	sprintf( local_var_str, "str_%s", VAR_INTERNAL_TOKEN );
+	if ( C_PYTHON_EVAL_FAIL == python_eval_string( "%s = %s.group(%d)", local_var_str, local_var_match, idx) )
+	{
+		fprintf( stderr, "[Error] %s.group method fail\n", local_var_match );
+		exit(1);
+	}
+
+	python_value_t py_val = python_get_object_value ( local_var_str, C_PYTHON_VALUE_TYPE_STRING );
+	return py_val.sval;
+}
+
+// -------------------------------------------------------------------------------
+// Internal function
+// -------------------------------------------------------------------------------
 static const char *python_get_object_type_name ( PyObject *obj )
 {
 	return Py_TYPE(obj)->tp_name;
