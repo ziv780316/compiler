@@ -17,8 +17,8 @@ LINKER     = $(CC)
 DEFINES    = 
 BUILD_TYPE = -g3
 CFLAGS     = $(BUILD_TYPE) -Wfatal-errors -Wall -Wextra -Wenum-compare -std=gnu99 -fPIC -Wno-unused-parameter -Wno-unused-variable
-LIBS       = -Wl,-rpath='/usr/local/lib' -lpython3.9 -lm
-INCLUDE    = -I/usr/local/include/python3.9
+LIBS       = -Wl,-rpath='/usr/lib' -lpython3.8 -lm
+INCLUDE    = -I/usr/include/python3.8
 MOVE       = mv -f
 
 #=================================================

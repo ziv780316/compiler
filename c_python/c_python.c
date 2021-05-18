@@ -16,6 +16,17 @@ void python_init ( int debug )
 {
 	Py_InitializeEx( 0 ); // 0 is means do not use python signal handler (Py_Initialize will call Py_InitializeEx(1))
 
+	PyObject *module = PyImport_AddModule("__main__");
+	if ( module == NULL )
+	{
+		fprintf( stderr, "[Error] python import module __main__ fail\n" );
+		exit(1);
+	}
+
+	python_eval_string( "import re as re" );
+	python_eval_string( "import matplotlib.pyplot as plt" );
+	python_eval_string( "import numpy as np" );
+
 	g_debug_python = debug;
 }
 
@@ -181,13 +192,6 @@ python_value_t python_get_dict_value ( const char *name, const char *key, int ty
 
 char *python_re_string_slice ( const char *str, const char *pattern, int idx, int ignore_case )
 {
-	static int init = 0;
-	if ( !init )
-	{
-		python_eval_string( "import re" );
-		init = 1;
-	}
-
 	char local_var_match[BUFSIZ];
 	sprintf( local_var_match, "match_%s", VAR_INTERNAL_TOKEN );
 	int eval_status;

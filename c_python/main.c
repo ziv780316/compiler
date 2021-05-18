@@ -90,6 +90,31 @@ int main ( int argc, char **argv )
 	printf( "slice group 1 = %s\n", node_name );
 	printf( "slice group 2 = %s\n", node_value );
 
+	// plot
+	python_eval_string( 
+	"t = np.arange(0,2,0.05);"
+	"s1 = np.sin(2*np.pi*t);"
+	"s2 = np.sin(2*np.pi*t/0.5);"
+	"s3 = np.sin(2*np.pi*t/2);"
+	"fig = plt.figure(1);"
+	"fig.suptitle('plot test');"
+	"plt.subplot(3,1,1);"
+	"plt.plot(t,s1,'ro-',markersize=10);"
+	"ax = plt.gca();"
+	"ax.set_ylabel('sin(2*pi*t)');"
+	"plt.subplot(3,1,2);"
+	"plt.plot(t,s2,'bs-');"
+	"ax = plt.gca();"
+	"ax.set_ylabel('sin(2*pi*t/0.5)');"
+	"plt.subplot(3,1,3);"
+	"plt.plot(t,s3,'g-',linewidth=10);"
+	"ax = plt.gca();"
+	"ax.set_ylabel('sin(2*pi*t/2)');"
+	"ax.set_xlabel('time (s)');"
+	"plt.show();"
+	"fig.savefig('plot.png');"
+	);
+
 	// close C-Python
 	python_close();
 
