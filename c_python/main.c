@@ -4,35 +4,6 @@
 #include <math.h>
 #include "c_python.h"
 
-double c_exp( double x, double limit )
-{
-	return exp( fmin(limit, x) );
-}
-
-// registed C function used in python
-static PyObject *_c_exp( PyObject *self, PyObject *args, PyObject *kwargs )
-{
-	double x = NAN;  // non-optional argument
-	double limit = 30; // optional argument
-	static char *kwlist[] = { "x", "limit", NULL };
-
-	// | use to separate non-optional and optional argument
-	if ( !PyArg_ParseTupleAndKeywords( args, kwargs, "d|d", kwlist, &x, &limit) ) 
-	{
-		fprintf( stderr, "[Error] python parse tuple and keyword fail\n" );
-		exit(1);
-	}
-
-	double y = c_exp( x, limit );
-	PyObject *obj = Py_BuildValue( "d", y );  // d for double, l for long
-	if ( !obj )
-	{
-		fprintf( stderr, "[Error] build objct value fail\n" );
-		exit(1);
-	}
-	return obj;
-}
-
 int main ( int argc, char **argv )
 {
 	// init C-Python
@@ -107,6 +78,16 @@ int main ( int argc, char **argv )
 
 	// run python script
 	python_exec_py_script( "test.py" );
+
+	// use extern code in python (dlopen C module)
+	python_eval_string( 
+	"import sys;"
+	"sys.path.append('.');"
+	"import c_performance as c;"
+	"val = c.norm( order=2, vector=[1, 2, 3], debug=1 );"
+	"print( 'c.norm2 =', val );"
+	"print( 'np.norm2=', np.linalg.norm([1, 2, 3], 2) );"
+	);
 
 	// sub plot
 	char **name_list = (char **) malloc (sizeof(char*)*4);

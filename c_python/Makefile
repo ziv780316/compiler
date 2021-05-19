@@ -53,12 +53,15 @@ TARGET            := test
 #=================================================
 # Target rules
 #=================================================
-default: test
+default: test c_module
 
 test: create_dir $(PRE_HEADER) $(OBJS) 
 	cd $(LIBRARY_DIR);\
 	$(LINKER) -o $@ $(OBJS) $(LIBS);\
 	$(MOVE) $@ ../$(BIN_DIR)
+
+c_module: c_module.c c_python.h
+	python3.8 setup.py build_ext --inplace
 
 debug: BUILD_TYPE:=-g3 
 debug: default
