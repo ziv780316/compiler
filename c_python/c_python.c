@@ -106,28 +106,34 @@ python_value_t python_get_object_value ( const char *name, int type )
 	python_value_t val;
 	if ( C_PYTHON_VALUE_TYPE_STRING == type )
 	{
-		char *c_str = python_get_object_c_str( obj );
-		val.sval = c_str;
+		val.sval = python_get_object_c_str( obj );
+	}
+	else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
+	{
+		val.ival = PyLong_AsLong( obj );
+		if ( -1 == val.ival )
+		{
+			fprintf( stderr, "[Error] python translate %s into int fail\n", name );
+			exit(1);
+		}
 	}
 	else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
 	{
-		long lval = PyLong_AsLong( obj );
-		if ( -1 == lval )
+		val.lval = PyLong_AsLong( obj );
+		if ( -1 == val.lval )
 		{
 			fprintf( stderr, "[Error] python translate %s into long fail\n", name );
 			exit(1);
 		}
-		val.lval = lval;
 	}
 	else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
 	{
-		double dval = PyFloat_AsDouble( obj );
-		if ( -1 == dval )
+		val.dval = PyFloat_AsDouble( obj );
+		if ( -1 == val.dval )
 		{
 			fprintf( stderr, "[Error] python translate %s into double fail\n", name );
 			exit(1);
 		}
-		val.dval = dval;
 	}
 
 	return val;
@@ -166,28 +172,187 @@ python_value_t python_get_dict_value ( const char *name, const char *key, int ty
 	{
 		val.sval = python_get_object_c_str( val_obj );
 	}
+	else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
+	{
+		val.ival = PyLong_AsLong( val_obj );
+		if ( -1 == val.ival )
+		{
+			fprintf( stderr, "[Error] python translate %s['%s'] into int fail\n", name, key );
+			exit(1);
+		}
+	}
 	else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
 	{
-		long lval = PyLong_AsLong( val_obj );
-		if ( -1 == lval )
+		val.lval = PyLong_AsLong( val_obj );
+		if ( -1 == val.lval )
 		{
 			fprintf( stderr, "[Error] python translate %s['%s'] into long fail\n", name, key );
 			exit(1);
 		}
-		val.lval = lval;
 	}
 	else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
 	{
-		double dval = PyFloat_AsDouble( val_obj );
-		if ( -1 == dval )
+		val.dval = PyFloat_AsDouble( val_obj );
+		if ( -1 == val.dval )
 		{
 			fprintf( stderr, "[Error] python translate %s['%s'] into double fail\n", name, key );
 			exit(1);
 		}
-		val.dval = dval;
 	}
 
 	return val;
+}
+
+void python_create_list ( const char *name, void *src, ssize_t length, int type )
+{
+	PyObject *module = PyImport_AddModule("__main__");
+	if ( module == NULL )
+	{
+		fprintf( stderr, "[Error] python import module __main__ fail\n" );
+		exit(1);
+	}
+
+	PyObject *pylist = PyList_New( length );
+	if ( !pylist )
+	{
+		fprintf( stderr, "[Error] new list object '%s' fail\n", name );
+		exit(1);
+	}
+
+	int res = PyObject_SetAttrString( module, name, pylist );  // equal to python: name = list() but with pre-allocate length
+	if ( -1 == res )
+	{
+		fprintf( stderr, "[Error] declare list object '%s' fail\n", name );
+		exit(1);
+	}
+
+	if ( g_debug_python )
+	{
+		fprintf( stderr, "[DEBUG] object '%s' type=%s\n", name, python_get_object_type_name(pylist) );
+	}
+
+	PyObject *val_obj;
+	for ( ssize_t i = 0; i < length; ++i )
+	{
+		if ( C_PYTHON_VALUE_TYPE_STRING == type )
+		{
+			val_obj = (PyObject *) PyUnicode_FromString( ((char **)src)[i] );
+			if ( !val_obj )
+			{
+				fprintf( stderr, "[Error] python set %s[%ld]=%s fail\n", name, i, ((char **)src)[i] );
+				exit(1);
+			}
+		}
+		else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
+		{
+			val_obj = (PyObject *) PyLong_FromLong( ((int*)src)[i] );
+			if ( !val_obj )
+			{
+				fprintf( stderr, "[Error] python set %s[%ld]=%d fail\n", name, i, ((int *)src)[i] );
+				exit(1);
+			}
+		}
+		else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
+		{
+			val_obj = (PyObject *) PyLong_FromLong( ((long*)src)[i] );
+			if ( !val_obj )
+			{
+				fprintf( stderr, "[Error] python set %s[%ld]=%ld fail\n", name, i, ((long *)src)[i] );
+				exit(1);
+			}
+		}
+		else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
+		{
+			val_obj = (PyObject *) PyFloat_FromDouble( ((double *)src)[i] );
+			if ( !val_obj )
+			{
+				fprintf( stderr, "[Error] python set %s[%ld]=%.10le fail\n", name, i, ((double *)src)[i] );
+				exit(1);
+			}
+		}
+		if ( -1 == PyList_SetItem( pylist, i, val_obj ) )
+		{
+			fprintf( stderr, "[Error] python set %s[%ld] value\n", name, i );
+			exit(1);
+		}
+	}
+}
+
+void python_copy_list ( const char *name, void *dest, ssize_t length, int type )
+{
+	PyObject *module = PyImport_AddModule("__main__");
+	if ( module == NULL )
+	{
+		fprintf( stderr, "[Error] python import module __main__ fail\n" );
+		exit(1);
+	}
+
+	PyObject *obj = PyObject_GetAttrString( module, name );
+	if ( !obj )
+	{
+		fprintf( stderr, "[Error] cannot find %s in module __main__ dictionary\n", name );
+		exit(1);
+	}
+
+	if ( g_debug_python )
+	{
+		fprintf( stderr, "[DEBUG] object '%s' type=%s\n", name, python_get_object_type_name(obj) );
+	}
+
+	// sanity check
+	ssize_t pylist_length =  PyList_Size( obj );
+	if ( pylist_length > length )
+	{
+		fprintf( stderr, "[Error] try to copy %s length=%ld > list_size=%ld\n", name, length, pylist_length );
+		exit(1);
+	}
+	
+	for ( ssize_t i = 0; i < length; ++i )
+	{
+		PyObject *val_obj = PyList_GetItem( obj, i );
+		if ( !val_obj )
+		{
+			fprintf( stderr, "[Error] list '%s' get item of index %ld fail\n", name, i );
+			exit(1);
+		}
+
+		python_value_t val;
+		if ( C_PYTHON_VALUE_TYPE_STRING == type )
+		{
+			val.sval = python_get_object_c_str( val_obj );
+			((char **)dest)[i] = val.sval;
+		}
+		else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
+		{
+			val.ival = PyLong_AsLong( val_obj );
+			if ( -1 == val.ival )
+			{
+				fprintf( stderr, "[Error] python translate %s[%ld] into int fail\n", name, i );
+				exit(1);
+			}
+			((int *)dest)[i] = val.ival;
+		}
+		else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
+		{
+			val.lval = PyLong_AsLong( val_obj );
+			if ( -1 == val.lval )
+			{
+				fprintf( stderr, "[Error] python translate %s[%ld] into long fail\n", name, i );
+				exit(1);
+			}
+			((long *)dest)[i] = val.lval;
+		}
+		else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
+		{
+			val.dval = PyFloat_AsDouble( val_obj );
+			if ( -1 == val.dval )
+			{
+				fprintf( stderr, "[Error] python translate %s[%ld] into double fail\n", name, i );
+				exit(1);
+			}
+			((double*)dest)[i] = val.dval;
+		}
+	}
 }
 
 char *python_re_string_slice ( const char *str, const char *pattern, int idx, int ignore_case )

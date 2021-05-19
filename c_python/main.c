@@ -52,6 +52,21 @@ int main ( int argc, char **argv )
 	py_val = python_get_object_value( "x", C_PYTHON_VALUE_TYPE_FLOAT_64 );
 	printf( "get x = %.15le\n", py_val.dval );
 
+	// list
+	double *v = (double *) malloc (sizeof(double)*4);
+	v[0] = 1.1;
+	v[1] = 5.2;
+	v[2] = 100;
+	v[3] = -0.1;
+	python_create_list( "v", v, 4, C_PYTHON_VALUE_TYPE_FLOAT_64 );
+	python_eval_string( "v.sort();");
+	double *v_sort = (double *) malloc (sizeof(double)*4);
+	python_copy_list( "v", v_sort, 4, C_PYTHON_VALUE_TYPE_FLOAT_64 );
+	for ( ssize_t i = 0; i < 4; ++i )
+	{
+		printf( "v_sort[%ld]=%.10le\n", i, v_sort[i] );
+	}
+
 	// dict
 	python_eval_string(
 	"map = {};" 
@@ -91,28 +106,35 @@ int main ( int argc, char **argv )
 	printf( "slice group 2 = %s\n", node_value );
 
 	// plot
+	char **name_list = (char **) malloc (sizeof(char*)*4);
+	name_list[0] = "name1";
+	name_list[1] = "name2";
+	name_list[2] = "name3";
+	name_list[3] = "name4";
+	python_create_list( "name_list", name_list, 4, C_PYTHON_VALUE_TYPE_STRING );
 	python_eval_string( 
 	"t = np.arange(0,2,0.05);"
 	"s1 = np.sin(2*np.pi*t);"
 	"s2 = np.sin(2*np.pi*t/0.5);"
 	"s3 = np.sin(2*np.pi*t/2);"
-	"fig = plt.figure(1);"
+	"fig, axs = plt.subplots(2,2,figsize=(12,8));" // figsize unit is monitor inches
 	"fig.suptitle('plot test');"
-	"plt.subplot(3,1,1);"
-	"plt.plot(t,s1,'ro-',markersize=10);"
-	"ax = plt.gca();"
-	"ax.set_ylabel('sin(2*pi*t)');"
-	"plt.subplot(3,1,2);"
-	"plt.plot(t,s2,'bs-');"
-	"ax = plt.gca();"
-	"ax.set_ylabel('sin(2*pi*t/0.5)');"
-	"plt.subplot(3,1,3);"
-	"plt.plot(t,s3,'g-',linewidth=10);"
-	"ax = plt.gca();"
-	"ax.set_ylabel('sin(2*pi*t/2)');"
-	"ax.set_xlabel('time (s)');"
+	"axs[0,0].plot(t,s1,'ro-',markersize=10);"
+	"axs[0,0].set_ylabel('sin(2*pi*t)');"
+	"axs[0,0].set_xlabel('time (s)');"
+	"axs[1,0].plot(t,s2,'bs-');"
+	"axs[1,0].set_ylabel('sin(2*pi*t/0.5)');"
+	"axs[1,0].set_xlabel('time (s)');"
+	"axs[0,1].plot(t,s3,'g-',linewidth=10);"
+	"axs[0,1].set_ylabel('sin(2*pi*t/2)');"
+	"axs[0,1].set_xlabel('time (s)');"
+	"plt.show( block=False );" // non-block
+	"fig.savefig('plot.png');" 
+	""
+	"fig, ax = plt.subplots();"
+	"ax.plot(name_list, np.sin(range(len(name_list))),'p-');"
+	"ax.set_ylabel('sin(list)');"
 	"plt.show();"
-	"fig.savefig('plot.png');"
 	);
 
 	// close C-Python

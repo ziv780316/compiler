@@ -11,6 +11,7 @@
 typedef union
 {
 	char cval;
+	int ival;
 	long lval;
 	double dval;
 	char *sval;
@@ -25,7 +26,10 @@ int python_eval_string ( const char *fmt, ... );
 
 python_value_t python_get_object_value ( const char *name, int type );
 python_value_t python_get_dict_value ( const char *name, const char *key, int type );
+void python_create_list ( const char *name, void *dest, ssize_t length, int type );
+void python_copy_list ( const char *name, void *dest, ssize_t length, int type );
 #define C_PYTHON_VALUE_TYPE_CHAR 0
+#define C_PYTHON_VALUE_TYPE_INT_32 1
 #define C_PYTHON_VALUE_TYPE_INT_64 1
 #define C_PYTHON_VALUE_TYPE_FLOAT_64 2
 #define C_PYTHON_VALUE_TYPE_STRING 3
