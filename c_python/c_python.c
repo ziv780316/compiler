@@ -410,6 +410,42 @@ char *python_re_string_slice ( const char *str, const char *pattern, int idx, in
 	return py_val.sval;
 }
 
+void python_exec_py_script ( const char *filename )
+{
+	FILE *fin = fopen( filename, "r" );
+	if ( !fin )
+	{
+		fprintf( stderr, "[Error] open python script %s fail -> %s\n", filename, strerror(errno) );
+		exit(1);
+	}
+
+	PyObject *module = PyImport_AddModule("__main__");
+	if ( module == NULL )
+	{
+		fprintf( stderr, "[Error] python import module __main__ fail\n" );
+		exit(1);
+	}
+
+	PyObject *dict = PyModule_GetDict( module );
+	if ( !dict )
+	{
+		fprintf( stderr, "[Error] python fetch local and global variable dict fail from module __main__\n" );
+		exit(1);
+	}
+
+	if ( g_debug_python )
+	{
+		fprintf( stderr, "[DEBUG] exec %s ...\n", filename );
+	}
+	if ( !PyRun_FileEx( fin, filename, Py_file_input, dict, dict, 0 ) ) // 0 means do not call fclose(fin) inside
+	{
+		fprintf( stderr, "[Error] python exec script %s fail\n", filename );
+		exit(1);
+	}
+	fclose( fin );
+}
+
+
 // -------------------------------------------------------------------------------
 // Internal function
 // -------------------------------------------------------------------------------

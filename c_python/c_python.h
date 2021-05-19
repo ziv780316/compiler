@@ -36,5 +36,7 @@ void python_copy_list ( const char *name, void *dest, ssize_t length, int type )
 
 char *python_re_string_slice ( const char *str, const char *pattern, int idx, int ignore_case );
 
+void python_exec_py_script ( const char *filename );
+
 #endif
 

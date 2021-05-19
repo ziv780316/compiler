@@ -105,7 +105,10 @@ int main ( int argc, char **argv )
 	printf( "slice group 1 = %s\n", node_name );
 	printf( "slice group 2 = %s\n", node_value );
 
-	// plot
+	// run python script
+	python_exec_py_script( "test.py" );
+
+	// sub plot
 	char **name_list = (char **) malloc (sizeof(char*)*4);
 	name_list[0] = "name1";
 	name_list[1] = "name2";
@@ -129,7 +132,7 @@ int main ( int argc, char **argv )
 	"axs[0,1].set_ylabel('sin(2*pi*t/2)');"
 	"axs[0,1].set_xlabel('time (s)');"
 	"plt.show( block=False );" // non-block
-	"fig.savefig('plot.png');" 
+	"fig.savefig('plot.png');"  // export
 	""
 	"fig, ax = plt.subplots();"
 	"ax.plot(name_list, np.sin(range(len(name_list))),'p-');"
