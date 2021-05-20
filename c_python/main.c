@@ -79,14 +79,16 @@ int main ( int argc, char **argv )
 	// run python script
 	python_exec_py_script( "test.py" );
 
-	// use extern code in python (dlopen C module)
-	add_import_module_search_path( "." );
+	// python use extern code in python (dlopen C module)
+	append_import_module_search_path( "." );
 	python_eval_string( 
 	"import c_performance as c;"
 	"val = c.norm( order=2, vector=[1, 2, 3], debug=1 );"
 	"print( 'c.norm2 =', val );"
 	"print( 'np.norm2=', np.linalg.norm([1, 2, 3], 2) );"
 	);
+
+	// c call python library
 
 	// sub plot
 	char **name_list = (char **) malloc (sizeof(char*)*4);

@@ -216,7 +216,7 @@ void python_create_list ( const char *name, void *src, ssize_t length, int type 
 		exit(1);
 	}
 
-	PyObject *pylist = PyList_New( length );
+	PyObject *pylist = PyList_New( length ); // dynamic-array, not linked-list
 	if ( !pylist )
 	{
 		fprintf( stderr, "[Error] new list object '%s' fail\n", name );
@@ -450,15 +450,25 @@ void python_exec_py_script ( const char *filename )
 	fclose( fin );
 }
 
-void add_import_module_search_path ( const char *path )
+void append_import_module_search_path ( const char *path )
 {
-	wchar_t *decode_path = Py_DecodeLocale( path, NULL);
-	if ( !decode_path )
+	PyObject *sys_path = PySys_GetObject( "path" );
+	if ( !sys_path )
 	{
-		fprintf( stderr, "[Error] Py_DecodeLocale path %s fail\n", path );
+		fprintf( stderr, "[Error] PySys_GetObject(\"path\") fail\n" );
+		exit(1);
 	}
-	PySys_SetPath( decode_path ); // set path into search list
-	free( decode_path );
+	PyObject *utf_path = PyUnicode_FromString( path );
+	if ( !utf_path )
+	{
+		fprintf( stderr, "[Error] encode %s to UTF-8 fail\n", path );
+		exit(1);
+	}
+	if ( -1 == PyList_Append( sys_path, utf_path ) )  
+	{
+		fprintf( stderr, "[Error] append sys path %s fail \n", path );
+		exit(1);
+	}
 } 
 
 // -------------------------------------------------------------------------------
