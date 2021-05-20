@@ -447,7 +447,7 @@ void python_exec_py_script ( const char *filename )
 
 void add_import_module_search_path ( const char *path )
 {
-	PySys_SetPath( Py_DecodeLocale( path, NULL) ); // set path into search dict
+	PySys_SetPath( Py_DecodeLocale( path, NULL) ); // set path into search list
 } 
 
 // -------------------------------------------------------------------------------
