@@ -9,6 +9,10 @@ static int g_debug_python = 0;
 
 static const char *python_get_object_type_name ( PyObject *obj );
 static char *python_get_object_c_str ( PyObject *obj );
+static void python_object_cleanup_ref ( PyObject **obj );
+
+#define pPyObject_cleanup PyObject *__attribute__((__cleanup__(python_object_cleanup_ref)))
+
 
 #define VAR_INTERNAL_TOKEN "___use_in_c_python"
 
@@ -62,16 +66,16 @@ int python_eval_string ( const char *fmt, ... )
 		exit(1);
 	}
 
+
 	// use PyRun_StringFlags(const char *str, int start_token, PyObject *globals, PyObject *locals, PyCompilerFlags *flags);
-	PyObject *ret_obj = PyRun_StringFlags( command, Py_file_input, dict, dict, NULL );
+	pPyObject_cleanup ret_obj = PyRun_StringFlags( command, Py_file_input, dict, dict, NULL );
 	if ( !ret_obj )
 	{
 		fprintf( stderr, "[Error] python execute command %s fail\n", command );
 		PyErr_Print();
 		return C_PYTHON_EVAL_FAIL;
 	}
-
-	Py_DECREF( ret_obj ); // decrease obj reference
+	//fprintf( stderr, "[REFCNT] ret_obj->ob_refcnt=%ld\n", ret_obj->ob_refcnt ); // ensure cleanup call Py_DECREF work
 
 	return C_PYTHON_EVAL_OK;
 }
@@ -270,6 +274,7 @@ void python_create_list ( const char *name, void *src, ssize_t length, int type 
 				exit(1);
 			}
 		}
+
 		if ( -1 == PyList_SetItem( pylist, i, val_obj ) )
 		{
 			fprintf( stderr, "[Error] python set %s[%ld] value\n", name, i );
@@ -447,7 +452,13 @@ void python_exec_py_script ( const char *filename )
 
 void add_import_module_search_path ( const char *path )
 {
-	PySys_SetPath( Py_DecodeLocale( path, NULL) ); // set path into search list
+	wchar_t *decode_path = Py_DecodeLocale( path, NULL);
+	if ( !decode_path )
+	{
+		fprintf( stderr, "[Error] Py_DecodeLocale path %s fail\n", path );
+	}
+	PySys_SetPath( decode_path ); // set path into search list
+	free( decode_path );
 } 
 
 // -------------------------------------------------------------------------------
@@ -489,3 +500,9 @@ static char *python_get_object_c_str ( PyObject *obj )
 
 	return strdup(c_str);
 }
+
+static void python_object_cleanup_ref ( PyObject **obj )
+{
+	Py_DECREF( *obj );
+}
+
