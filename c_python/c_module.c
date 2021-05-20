@@ -18,7 +18,7 @@ static struct PyModuleDef c_performance_module = {
   c_performance_methods
 };
 
-PyMODINIT_FUNC PyInit_c_performance () 
+PyMODINIT_FUNC PyInit_c_performance () // first call this function after dlopen( "c_performance.so", ... )
 {
   return PyModule_Create( &c_performance_module );
 }

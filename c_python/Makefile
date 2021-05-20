@@ -17,7 +17,7 @@ LINKER     = $(CC)
 DEFINES    = 
 BUILD_TYPE = -g3
 CFLAGS     = $(BUILD_TYPE) -Wfatal-errors -Wall -Wextra -Wenum-compare -std=gnu99 -fPIC -Wno-unused-parameter -Wno-unused-variable
-LIBS       = -Wl,-rpath='/usr/lib' -lpython3.8 -lm
+LIBS       = -Wl,-rpath='/lib/x86_64-linux-gnu' -lpython3.8 -lm
 INCLUDE    = -I/usr/include/python3.8
 MOVE       = mv -f
 
@@ -61,7 +61,9 @@ test: create_dir $(PRE_HEADER) $(OBJS)
 	$(MOVE) $@ ../$(BIN_DIR)
 
 c_module: c_module.c c_python.h
-	python3.8 setup.py build_ext --inplace
+	$(CC) -c c_module.c -o c_module.o -O2 -fPIC $(INCLUDE)
+	$(CC) c_module.o -shared -o c_performance.so $(LIBS)
+	#python3.8 setup.py build_ext --inplace
 
 debug: BUILD_TYPE:=-g3 
 debug: default

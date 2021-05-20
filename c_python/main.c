@@ -80,9 +80,8 @@ int main ( int argc, char **argv )
 	python_exec_py_script( "test.py" );
 
 	// use extern code in python (dlopen C module)
+	add_import_module_search_path( "." );
 	python_eval_string( 
-	"import sys;"
-	"sys.path.append('.');"
 	"import c_performance as c;"
 	"val = c.norm( order=2, vector=[1, 2, 3], debug=1 );"
 	"print( 'c.norm2 =', val );"
