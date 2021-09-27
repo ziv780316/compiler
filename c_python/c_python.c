@@ -115,29 +115,20 @@ python_value_t python_get_object_value ( const char *name, int type )
 	else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
 	{
 		val.ival = PyLong_AsLong( obj );
-		if ( -1 == val.ival )
-		{
-			fprintf( stderr, "[Error] python translate %s into int fail\n", name );
-			exit(1);
-		}
 	}
 	else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
 	{
 		val.lval = PyLong_AsLong( obj );
-		if ( -1 == val.lval )
-		{
-			fprintf( stderr, "[Error] python translate %s into long fail\n", name );
-			exit(1);
-		}
 	}
 	else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
 	{
 		val.dval = PyFloat_AsDouble( obj );
-		if ( -1 == val.dval )
-		{
-			fprintf( stderr, "[Error] python translate %s into double fail\n", name );
-			exit(1);
-		}
+	}
+	else if ( C_PYTHON_VALUE_TYPE_COMPLEX_64 == type )
+	{
+		double re = PyComplex_RealAsDouble( obj );
+		double im = PyComplex_ImagAsDouble( obj );
+		val.cdval = re + I*im;
 	}
 
 	return val;
@@ -179,29 +170,14 @@ python_value_t python_get_dict_value ( const char *name, const char *key, int ty
 	else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
 	{
 		val.ival = PyLong_AsLong( val_obj );
-		if ( -1 == val.ival )
-		{
-			fprintf( stderr, "[Error] python translate %s['%s'] into int fail\n", name, key );
-			exit(1);
-		}
 	}
 	else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
 	{
 		val.lval = PyLong_AsLong( val_obj );
-		if ( -1 == val.lval )
-		{
-			fprintf( stderr, "[Error] python translate %s['%s'] into long fail\n", name, key );
-			exit(1);
-		}
 	}
 	else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
 	{
 		val.dval = PyFloat_AsDouble( val_obj );
-		if ( -1 == val.dval )
-		{
-			fprintf( stderr, "[Error] python translate %s['%s'] into double fail\n", name, key );
-			exit(1);
-		}
 	}
 
 	return val;
@@ -274,6 +250,20 @@ void python_create_list ( const char *name, void *src, ssize_t length, int type 
 				exit(1);
 			}
 		}
+		else if ( C_PYTHON_VALUE_TYPE_COMPLEX_64 == type )
+		{
+			val_obj = (PyObject *) PyComplex_FromDoubles( creal(((complex *)src)[i]), cimag(((complex *)src)[i]) );
+			if ( !val_obj )
+			{
+				fprintf( stderr, "[Error] python set %s[%ld]=%.10le+1j*%.10le fail\n", name, i, creal(((complex *)src)[i]), cimag(((complex *)src)[i])  );
+				exit(1);
+			}
+		}
+		else
+		{
+			fprintf( stderr, "[Error] unknown value type = %d\n", type );
+			exit(1);
+		}
 
 		if ( -1 == PyList_SetItem( pylist, i, val_obj ) )
 		{
@@ -330,31 +320,16 @@ void python_copy_list ( const char *name, void *dest, ssize_t length, int type )
 		else if ( C_PYTHON_VALUE_TYPE_INT_32 == type )
 		{
 			val.ival = PyLong_AsLong( val_obj );
-			if ( -1 == val.ival )
-			{
-				fprintf( stderr, "[Error] python translate %s[%ld] into int fail\n", name, i );
-				exit(1);
-			}
 			((int *)dest)[i] = val.ival;
 		}
 		else if ( C_PYTHON_VALUE_TYPE_INT_64 == type )
 		{
 			val.lval = PyLong_AsLong( val_obj );
-			if ( -1 == val.lval )
-			{
-				fprintf( stderr, "[Error] python translate %s[%ld] into long fail\n", name, i );
-				exit(1);
-			}
 			((long *)dest)[i] = val.lval;
 		}
 		else if ( C_PYTHON_VALUE_TYPE_FLOAT_64 == type )
 		{
 			val.dval = PyFloat_AsDouble( val_obj );
-			if ( -1 == val.dval )
-			{
-				fprintf( stderr, "[Error] python translate %s[%ld] into double fail\n", name, i );
-				exit(1);
-			}
 			((double*)dest)[i] = val.dval;
 		}
 	}

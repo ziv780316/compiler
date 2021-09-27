@@ -8,6 +8,8 @@
 #error "Py_LIMITED_API defined, system python package cannot support C-python"
 #endif
 
+#include <complex.h>
+
 typedef union
 {
 	char cval;
@@ -15,6 +17,7 @@ typedef union
 	long lval;
 	double dval;
 	char *sval;
+	complex cdval;
 } python_value_t;
 
 void python_init ( int debug );
@@ -33,6 +36,7 @@ void python_copy_list ( const char *name, void *dest, ssize_t length, int type )
 #define C_PYTHON_VALUE_TYPE_INT_64 1
 #define C_PYTHON_VALUE_TYPE_FLOAT_64 2
 #define C_PYTHON_VALUE_TYPE_STRING 3
+#define C_PYTHON_VALUE_TYPE_COMPLEX_64 4
 
 char *python_re_string_slice ( const char *str, const char *pattern, int idx, int ignore_case );
 

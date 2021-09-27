@@ -23,6 +23,11 @@ int main ( int argc, char **argv )
 	py_val = python_get_object_value( "x", C_PYTHON_VALUE_TYPE_FLOAT_64 );
 	printf( "get x = %.15le\n", py_val.dval );
 
+	// eval complex
+	python_eval_string( "z = 1+1.5j" );
+	py_val = python_get_object_value( "z", C_PYTHON_VALUE_TYPE_COMPLEX_64 );
+	printf( "get z = %.15le+1j*%.15le\n", creal(py_val.cdval), cimag(py_val.cdval) );
+
 	// list
 	double *v = (double *) malloc (sizeof(double)*4);
 	v[0] = 1.1;
@@ -87,8 +92,6 @@ int main ( int argc, char **argv )
 	"print( 'c.norm2 =', val );"
 	"print( 'np.norm2=', np.linalg.norm([1, 2, 3], 2) );"
 	);
-
-	// c call python library
 
 	// sub plot
 	char **name_list = (char **) malloc (sizeof(char*)*4);
