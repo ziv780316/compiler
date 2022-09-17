@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # =============================================================================
+echo "====================================================="
+echo "Following shows user's configuration:"
+set -x
 
 # specify target language (e.g. pyton, ruby, tcl, perl, xml ...)
 target_language="python"
@@ -20,16 +23,7 @@ c_compile_option="-Wall -std=c99 -O -fPIC -I/usr/include/python3.8"
 # specify C link option
 c_link_option="-shared -lm -lpython3.8"
 
-echo "====================================================="
-echo "Following shows user's configuration:"
-echo "+ target_language=${target_language}"
-echo "+ c_file_prefix=${c_file_prefix}"
-echo "+ output_wrapper_prefix=${output_wrapper_prefix}"
-echo "+ output_python_module_prefix=${output_python_module_prefix}"
-echo "+ module_so_name=${module_so_name}"
-echo "+ c_compile_option=${c_compile_option}"
-echo "+ c_link_option=${c_link_option}"
-echo ""
+{ set +x; } 2> /dev/null
 
 # =============================================================================
 # XXX Do not modify following command
@@ -44,9 +38,9 @@ swig_debug_options="-v"
 
 # converge *.c to wrapper
 echo -e "\n====================================================="
-echo "Swig compile ${c_file_prefix}.c -> ${output_wrapper_prefix}.c ..."
+echo "Swig compile ${c_file_prefix}.i -> ${output_wrapper_prefix}.c ..."
 set -x
-swig ${siwg_compile_options} -module ${output_python_module_prefix} ${swig_debug_options} -${target_language} c_module.i 
+swig ${siwg_compile_options} -module ${output_python_module_prefix} ${swig_debug_options} -${target_language} ${c_file_prefix}.i 
 { set +x; } 2> /dev/null
 if [ $? -ne 0 ]; then
         echo "[Error] swig compile ${c_file_prefix}.c -> ${output_wrapper_prefix}.c fail"
@@ -85,4 +79,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo -e "\n====================================================="
-echo "Complete"
+import_module_name=${module_so_name:1}
+import_module_name=${import_module_name/.so/}
+echo "Build ${module_so_name} successfully, you could use 'import ${import_module_name}' in python script"
