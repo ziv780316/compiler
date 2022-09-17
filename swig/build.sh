@@ -47,7 +47,7 @@ echo -e "\n====================================================="
 echo "Swig compile ${c_file_prefix}.c -> ${output_wrapper_prefix}.c ..."
 set -x
 swig ${siwg_compile_options} -module ${output_python_module_prefix} ${swig_debug_options} -${target_language} c_module.i 
-set +x
+{ set +x; } 2> /dev/null
 if [ $? -ne 0 ]; then
         echo "[Error] swig compile ${c_file_prefix}.c -> ${output_wrapper_prefix}.c fail"
         exit 1
@@ -58,7 +58,7 @@ echo -e "\n====================================================="
 echo "gcc compile ${c_file_prefix}.c -> ${c_file_prefix}.o ..."
 set -x
 gcc -c ${c_file_prefix}.c -o ${c_file_prefix}.o ${c_compile_option} 
-set +x
+{ set +x; } 2> /dev/null
 if [ $? -ne 0 ]; then
         echo "[Error] gcc compile ${c_file_prefix}.c -> $c_file_prefix}.o fail"
         exit 1
@@ -67,7 +67,7 @@ fi
 echo "gcc compile ${output_wrapper_prefix}.o -> ${output_wrapper_prefix}.o ..."
 set -x
 gcc -c ${output_wrapper_prefix}.c -o ${output_wrapper_prefix}.o ${c_compile_option} 
-set +x
+{ set +x; } 2> /dev/null
 if [ $? -ne 0 ]; then
         echo "[Error] gcc compile ${output_wrapper_prefix}.c -> ${output_wrapper_prefixo}.o fail"
         exit 1
@@ -78,7 +78,7 @@ echo -e "\n====================================================="
 echo "gcc link ${module_so_name} ..."
 set -x
 gcc ${c_file_prefix}.o ${output_wrapper_prefix}.o ${c_link_option} -o ${module_so_name}
-set +x
+{ set +x; } 2> /dev/null
 if [ $? -ne 0 ]; then
         echo "[Error] gcc link ${output_wrapper_prefix}.o -> ${module_so_name} fail"
         exit 1
