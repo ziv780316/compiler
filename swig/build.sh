@@ -11,7 +11,7 @@ c_file_prefix="c_module"
 # specify output target language module name (e.g. *.py, *.rb, *.tcl ...)
 output_python_module_prefix="${c_file_prefix}"
 
-# specify *.so name (leading '_' make PyInit_c_module -> PyInit__c_module is necessary)
+# specify *.so name (leading '_' make python import from searching PyInit_c_module -> PyInit__c_module, because swig generate PyInit__c_module)
 module_so_name="_${c_file_prefix}.so"
 
 # specify C compile option
